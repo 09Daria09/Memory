@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Игра Память</title>
+    <style>
+        #game {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: auto;
+            max-width: 560px;
+        }
+        body {
+            background-color: #f5c0c0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; 
+            margin: 0;
+        }
+
+        .card {
+            width: 100px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+            cursor: pointer; 
+        }
+
+        .card .front,
+        .card .back {
+            transition: transform 0.7s, opacity 0.7s ease;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            top: 0;
+            left: 0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .card .back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #eee;
+        }
+
+        .card img.front {
+            height: 100%;
+            width: 100%; 
+            object-fit: cover;
+        }
+
+        #game-control {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #8fbc8f;
+            color: white;
+            margin-top: 20px; 
+            margin-right: 320px;
+            transition: background-color 0.3s ease;
+        }
+
+        #game-control:hover {
+            background-color: #6b8e23; 
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game">
+        <div class="card" data-match="1">
+            <div class="back">Рубашка</div>
+            <img src="img/1.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="2">
+            <div class="back">Рубашка</div>
+            <img src="img/2.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="3">
+            <div class="back">Рубашка</div>
+            <img src="img/3.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="4">
+            <div class="back">Рубашка</div>
+            <img src="img/4.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="5">
+            <div class="back">Рубашка</div>
+            <img src="img/5.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="1">
+            <div class="back">Рубашка</div>
+            <img src="img/1.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="2">
+            <div class="back">Рубашка</div>
+            <img src="img/2.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="3">
+            <div class="back">Рубашка</div>
+            <img src="img/3.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="4">
+            <div class="back">Рубашка</div>
+            <img src="img/4.jpg" class="front" alt="">
+        </div>
+
+        <div class="card" data-match="5">
+            <div class="back">Рубашка</div>
+            <img src="img/5.jpg" class="front" alt="">
+        </div>
+    </div>
+    <button id="game-control">Start</button>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script>
+        $(document).ready(function () {
+            let openCards = [];
+            let matchesFound = 0;
+            function shuffleCards() {
+                var cards = $("#game .card");
+                for (var i = 0; i < cards.length; i++) {
+                    var target = Math.floor(Math.random() * cards.length - 1) + 1;
+                    var target2 = Math.floor(Math.random() * cards.length - 1) + 1;
+                    cards.eq(target).before(cards.eq(target2));
+                }
+            }
+            shuffleCards();
+    
+            $('#game-control').click(function () {
+                if ($(this).text() === "Start") {
+                    $(this).text("Finish");
+                    $('.card').removeClass('open match');
+                    $('.front').css({
+                        'transform': 'rotateY(180deg)',
+                        'opacity': '1'
+                    });
+                    $('.back').css('transform', 'rotateY(0deg)');
+                    openCards = [];
+                    matchesFound = 0;
+                } else {
+                    finishGame();
+                }
+            });
+    
+            $('.card').click(function () {
+                if ($('#game-control').text() !== "Finish" || openCards.length >= 2 || $(this).hasClass('open') || $(this).hasClass('match')) {
+                    return;
+                }
+    
+                $(this).addClass('open');
+                $(this).find('.front').css('transform', 'rotateY(0deg)');
+                $(this).find('.back').css('transform', 'rotateY(180deg)');
+                openCards.push($(this));
+    
+                if (openCards.length === 2) {
+                    checkForMatch();
+                }
+            });
+    
+            function checkForMatch() {
+                if (openCards[0].data('match') === openCards[1].data('match')) {
+                    let animationsCompleted = 0;
+                    openCards.forEach(function (card) {
+                        card.addClass('match').removeClass('open');
+                        card.effect('explode', {
+                            pieces: 16
+                        }, 1000, function () {
+                            $(this).effect('fade', { mode: 'show' }, 500, function () {
+                                animationsCompleted++;
+                                if (animationsCompleted === openCards.length) {
+                                    matchesFound++;
+                                    openCards = [];
+                                    if (matchesFound === $('.card').length / 2) {
+                                        setTimeout(function () {
+                                            alert('Игра завершена!');
+                                            $('#game-control').text("Start");
+                                            resetGame();
+                                        }, 500);
+                                    }
+                                }
+                            });
+                            card.find('.front').css('opacity', '0.5');
+                        });
+                    });
+                } else {
+                    setTimeout(function () {
+                        openCards.forEach(function (card) {
+                            card.removeClass('open');
+                            card.find('.front').css('transform', 'rotateY(180deg)');
+                            card.find('.back').css('transform', 'rotateY(0deg)');
+                        });
+                        openCards = [];
+                    }, 500);
+                }
+            }
+    
+            function finishGame() {
+                $('.card').addClass('open match');
+                $('.front').css('transform', '');
+                $('.back').css('transform', 'rotateY(180deg)');
+                $('#game-control').text("Start");
+            }
+    
+            function resetGame() {
+                shuffleCards();
+                $('.card').removeClass('open match').find('.front').css({
+                    'transform': 'rotateY(180deg)',
+                    'opacity': '1'
+                });
+                $('.back').css('transform', 'rotateY(0deg)');
+                openCards = [];
+                matchesFound = 0;
+            }
+        });
+    </script>
+    
+</body>
+
+</html>
